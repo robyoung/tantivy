@@ -580,8 +580,9 @@ mod tests {
         let counter_clone = counter.clone();
         let tmp_dir = tempfile::TempDir::new().unwrap();
         let tmp_dirpath = tmp_dir.path().to_owned();
-        let mut watch_wrapper = PollWatcher::new(&tmp_dirpath).unwrap();
         let tmp_file = tmp_dirpath.join(*META_FILEPATH);
+        fs::write(&tmp_file, b"").unwrap();
+        let mut watch_wrapper = PollWatcher::new(&tmp_dirpath).unwrap();
         let _handle = watch_wrapper.watch(Box::new(move || {
             counter_clone.fetch_add(1, Ordering::SeqCst);
         }));
@@ -590,8 +591,9 @@ mod tests {
             let _ = sender.send(());
         }));
         assert_eq!(counter.load(Ordering::SeqCst), 0);
+        fs::write(&tmp_file, b"whateverwilldo123").unwrap();
         fs::write(&tmp_file, b"whateverwilldo").unwrap();
-        assert!(receiver.recv_timeout(Duration::from_millis(500)).is_ok());
+        assert!(receiver.recv_timeout(Duration::from_millis(1000)).is_ok());
         assert!(counter.load(Ordering::SeqCst) >= 1);
     }
 
