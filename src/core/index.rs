@@ -392,6 +392,7 @@ mod tests {
     use crate::IndexReader;
     use crate::ReloadPolicy;
     use crate::{Directory, Index};
+    use std::time::Duration;
 
     #[test]
     fn test_indexer_for_field() {
@@ -479,6 +480,7 @@ mod tests {
         use crate::Directory;
         use std::path::PathBuf;
         use tempfile::TempDir;
+        use std::time::Duration;
 
         #[test]
         fn test_index_on_commit_reload_policy_mmap() {
@@ -515,7 +517,7 @@ mod tests {
                 let _ = sender.send(());
             }));
             writer.commit().unwrap();
-            assert!(receiver.recv().is_ok());
+            assert!(receiver.recv_timeout(Duration::from_millis(500)).is_ok());
             assert_eq!(reader.searcher().num_docs(), 0);
             reader.reload().unwrap();
             assert_eq!(reader.searcher().num_docs(), 1);
@@ -549,11 +551,11 @@ mod tests {
         assert_eq!(reader.searcher().num_docs(), 0);
         writer.add_document(doc!(field=>1u64));
         writer.commit().unwrap();
-        assert!(receiver.recv().is_ok());
+        assert!(receiver.recv_timeout(Duration::from_millis(500)).is_ok());
         assert_eq!(reader.searcher().num_docs(), 1);
         writer.add_document(doc!(field=>2u64));
         writer.commit().unwrap();
-        assert!(receiver.recv().is_ok());
+        assert!(receiver.recv_timeout(Duration::from_millis(500)).is_ok());
         assert_eq!(reader.searcher().num_docs(), 2);
     }
 
@@ -577,7 +579,7 @@ mod tests {
         }));
         writer.commit().unwrap();
         let mem_right_after_commit = directory.total_mem_usage();
-        assert!(receiver.recv().is_ok());
+        assert!(receiver.recv_timeout(Duration::from_millis(500)).is_ok());
         let reader = index
             .reader_builder()
             .reload_policy(ReloadPolicy::Manual)

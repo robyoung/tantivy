@@ -485,6 +485,7 @@ mod tests {
     use crate::ReloadPolicy;
     use std::fs;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::time::{Duration};
 
     #[test]
     fn test_open_non_existent_path() {
@@ -590,7 +591,7 @@ mod tests {
         }));
         assert_eq!(counter.load(Ordering::SeqCst), 0);
         fs::write(&tmp_file, b"whateverwilldo").unwrap();
-        assert!(receiver.recv().is_ok());
+        assert!(receiver.recv_timeout(Duration::from_millis(500)).is_ok());
         assert!(counter.load(Ordering::SeqCst) >= 1);
     }
 
