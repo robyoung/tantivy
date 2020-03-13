@@ -485,7 +485,7 @@ mod tests {
     use crate::ReloadPolicy;
     use std::fs;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::time::{Duration};
+    use std::time::Duration;
 
     #[test]
     fn test_open_non_existent_path() {
