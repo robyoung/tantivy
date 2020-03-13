@@ -1,11 +1,7 @@
 use fs2;
-use notify;
 
 use self::fs2::FileExt;
-use self::notify::RawEvent;
-use self::notify::RecursiveMode;
-use self::notify::Watcher;
-use crate::core::META_FILEPATH;
+
 use crate::directory::error::LockError;
 use crate::directory::error::{
     DeleteError, IOError, OpenDirectoryError, OpenReadError, OpenWriteError,
@@ -18,7 +14,7 @@ use crate::directory::DirectoryLock;
 use crate::directory::Lock;
 use crate::directory::ReadOnlySource;
 use crate::directory::WatchCallback;
-use crate::directory::WatchCallbackList;
+
 use crate::directory::WatchHandle;
 use crate::directory::{TerminatingWrite, WritePtr};
 use atomicwrites;
@@ -33,12 +29,12 @@ use std::io::{self, Seek, SeekFrom};
 use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::result;
-use std::sync::mpsc::{channel, Receiver, Sender};
+
 use std::sync::Arc;
-use std::sync::Mutex;
+
 use std::sync::RwLock;
 use std::sync::Weak;
-use std::thread;
+
 use tempfile::TempDir;
 
 /// Create a default io error given a string.
@@ -142,63 +138,6 @@ impl MmapCache {
         }))
     }
 }
-
-// struct WatcherWrapper {
-//     _watcher: Mutex<notify::RecommendedWatcher>,
-//     watcher_router: Arc<WatchCallbackList>,
-// }
-
-// impl WatcherWrapper {
-//     pub fn new(path: &Path) -> Result<Self, OpenDirectoryError> {
-//         let (tx, watcher_recv): (Sender<RawEvent>, Receiver<RawEvent>) = channel();
-//         // We need to initialize the
-//         let watcher = notify::raw_watcher(tx)
-//             .and_then(|mut watcher| {
-//                 watcher.watch(path, RecursiveMode::Recursive)?;
-//                 Ok(watcher)
-//             })
-//             .map_err(|err| match err {
-//                 notify::Error::PathNotFound => OpenDirectoryError::DoesNotExist(path.to_owned()),
-//                 _ => {
-//                     panic!("Unknown error while starting watching directory {:?}", path);
-//                 }
-//             })?;
-//         let watcher_router: Arc<WatchCallbackList> = Default::default();
-//         let watcher_router_clone = watcher_router.clone();
-//         thread::Builder::new()
-//             .name("meta-file-watch-thread".to_string())
-//             .spawn(move || {
-//                 loop {
-//                     match watcher_recv.recv().map(|evt| evt.path) {
-//                         Ok(Some(changed_path)) => {
-//                             // ... Actually subject to false positive.
-//                             // We might want to be more accurate than this at one point.
-//                             if let Some(filename) = changed_path.file_name() {
-//                                 if filename == *META_FILEPATH {
-//                                     let _ = watcher_router_clone.broadcast();
-//                                 }
-//                             }
-//                         }
-//                         Ok(None) => {
-//                             // not an event we are interested in.
-//                         }
-//                         Err(_e) => {
-//                             // the watch send channel was dropped
-//                             break;
-//                         }
-//                     }
-//                 }
-//             })?;
-//         Ok(WatcherWrapper {
-//             _watcher: Mutex::new(watcher),
-//             watcher_router,
-//         })
-//     }
-
-//     pub fn watch(&mut self, watch_callback: WatchCallback) -> WatchHandle {
-//         self.watcher_router.subscribe(watch_callback)
-//     }
-// }
 
 /// Directory storing data in files, read via mmap.
 ///
@@ -539,6 +478,7 @@ mod tests {
     // The following tests are specific to the MmapDirectory
 
     use super::*;
+    use crate::core::META_FILEPATH;
     use crate::indexer::LogMergePolicy;
     use crate::schema::{Schema, SchemaBuilder, TEXT};
     use crate::Index;
